@@ -116,11 +116,6 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 ## Pre-Preparation
 
-- Clone the repository
-  ```bash
-  git clone https://github.com/CSA-RH/acm-policies-cis.git
-  cd acm-policies-cis
-  ```
 - Login to the ACM HUB
   ```bash
   oc login -u admin -p <password> <api_fqdn:6443>
@@ -131,10 +126,10 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
   SECRET_NAME=$(oc get secret -n $CLUSTER_NAME -o name | grep 'admin-kubeconfig')
   oc extract $SECRET_NAME -n $CLUSTER_NAME --keys=kubeconfig --to=- > /tmp/${CLUSTER_NAME}-kubeconfig
   ```
-- Review the controls results for the Compliance Operator and the controls that must be manually checked.
-Go to ACM -> Governance, select the `CIS OpenShift Container Platform 4 Benchmark` standard and you will find the Policies annotated with this standard.
-  - Select and explore the policy named `compliance-cis-results`. This policy contains the results of the Compliance Operator scan against the `ocp4-cis`.
-  - The rest of the policies are related with manual controls, that the Compliance Operator doesn't classify, as these have to be manually checked.
+- Review the Compliance Operator scan results and the controls that require manual verification.
+  -Navigate to **ACM → Governance** and filter by the `CIS OpenShift Container Platform 4 Benchmark` standard to see all policies annotated against it.
+  - The policy named `compliance-cis-results` contains the automated scan results from the Compliance Operator against the `ocp4-cis` profile. Select it to review which controls passed, failed, or returned inconsistent results.
+  - The remaining policies correspond to controls that the Compliance Operator cannot evaluate automatically — these require manual review and evidence collection by the platform team.
 
 ---
 
