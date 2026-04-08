@@ -145,10 +145,10 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 **Test Procedure**
 
 1. Go to ACM -> Governance, select the `CIS OpenShift Container Platform 4 Benchmark` standard and select the policy `compliance-cis-results`. Under this Policy you will find the template `cis-results`, that shows the violations raised against each cluster.
-  - Select `cis-results`
-  - On the cluster template `cis-results`, press `View Details` to show the violations raised by `ocp4-cis`.
-  - One of such violations is `ocp4-cis-ocp-allowed-registries` - press on it and a new window will open with the recommendation to fix it.
-  - The Placement is configured with the label `vendor=OpenShift`, so this configuration is enforced in all the clusters of the fleet, including the hub cluster.
+    - Select `cis-results`
+    - On the cluster template `cis-results`, press `View Details` to show the violations raised by `ocp4-cis`.
+    - One of such violations is `ocp4-cis-ocp-allowed-registries` - press on it and a new window will open with the recommendation to fix it.
+    - The Placement is configured with the label `vendor=OpenShift`, so this configuration is enforced in all the clusters of the fleet, including the hub cluster.
 2. Create a new Policy to fix this control. This policy will be applied to all clusters because the placement is selecting the label `vendor: OpenShift`, which is configured in all clusters.
   - Copy the policy to the operators path, this will result that the applicationSet will create the Policy on the Hub
     ```bash
