@@ -104,55 +104,11 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
   oc get applicationset.argoproj.io -n openshift-gitops
   oc get app.argoproj.io -n openshift-gitops
   ```
-- Verify Policies on Managed Clusters
-Check that the policies are distributed and evaluated:
+- List Policies created
   ```bash
   # List all policies in the acm-policies namespace
   oc get policies -n acm-policies
-
-  # Check compliance status
-  oc get policies -n acm-policies -o custom-columns=NAME:.metadata.name,COMPLIANCE:.status.compliant
   ```
-
----
-
-# Hub Configuration Details
-
-## Grouping Clusters (`hub/clustergroups/`)
-
-After importing managed clusters into ACM, you can assign them to cluster sets by adding labels to the clusters. This enables policy placements to target specific groups of clusters - for example, applying stricter policies to production or different operator configurations to development.
-
-**Command structure:**
-
-```bash
-oc label managedcluster <cluster-name> <label-key>=<label-value> --overwrite
-```
-
----
-
-## Handling False Positives (Exception Workflow)
-
-When a policy flags a resource that is intentionally configured (e.g., a trusted user who should have `cluster-admin`), you can suppress the violation. RBAC policies use two different exception mechanisms depending on the policy:
-
-**Example 1 - Inline trusted list** (used by `detect-anonymous-and-wildcard-rbac`)
-
-The `rbac-no-unauth-access` and `rbac-no-wildcard-roles` ConfigurationPolicies each contain an inline trusted-entity list directly in `policies/rbac/manifests/cis-rbac-controls.yaml`. Add entries to suppress false positives:
-
-- `$allowedCRBs` - CRB names to skip in `rbac-no-unauth-access` (e.g. `"my-trusted-crb"`)
-- `$allowedRoles` - `"namespace/rolename"` entries to skip in `rbac-no-wildcard-roles`
-
-**Example 2 - Exceptions ConfigMap** (used by `cis-cluster-admin`)
-
-The `cis-cluster-admin` policy reads exceptions from a ConfigMap (`rbac-policy-exceptions` in `acm-policies` namespace) deployed to all managed clusters by the `cm-rbac-exceptions-exists` enforce policy. Each key holds a newline-separated list of resource names to skip.
-
-Edit `policies/rbac/manifests/cm-rbac-exceptions.yaml` and add the resource name:
-
-```yaml
-data:
-  cis-cluster-admin: |
-    cluster-admin-0
-    my-trusted-admin-binding
-```
 
 ---
 
@@ -482,6 +438,44 @@ Both approaches are **complementary**:
 
 - **`cluster-admin-allow-list`** (VAP) - **prevents** anyone from creating a *new* unauthorized CRB to `cluster-admin` going forward.
 - **`cis-cluster-admin`** (ConfigurationPolicy) - **detects** pre-existing non-compliant CRBs by scanning all ClusterRoleBindings on every evaluation cycle.
+
+---
+
+# Grouping Clusters (`hub/clustergroups/`)
+
+After importing managed clusters into ACM, you can assign them to cluster sets by adding labels to the clusters. This enables policy placements to target specific groups of clusters - for example, applying stricter policies to production or different operator configurations to development.
+
+**Command structure:**
+
+```bash
+oc label managedcluster <cluster-name> <label-key>=<label-value> --overwrite
+```
+
+---
+
+# Handling False Positives
+
+When a policy flags a resource that is intentionally configured (e.g., a trusted user who should have `cluster-admin`), you can suppress the violation. RBAC policies use two different exception mechanisms depending on the policy:
+
+**Example 1 - Inline trusted list** (used by `detect-anonymous-and-wildcard-rbac`)
+
+The `rbac-no-unauth-access` and `rbac-no-wildcard-roles` ConfigurationPolicies each contain an inline trusted-entity list directly in `policies/rbac/manifests/cis-rbac-controls.yaml`. Add entries to suppress false positives:
+
+- `$allowedCRBs` - CRB names to skip in `rbac-no-unauth-access` (e.g. `"my-trusted-crb"`)
+- `$allowedRoles` - `"namespace/rolename"` entries to skip in `rbac-no-wildcard-roles`
+
+**Example 2 - Exceptions ConfigMap** (used by `cis-cluster-admin`)
+
+The `cis-cluster-admin` policy reads exceptions from a ConfigMap (`rbac-policy-exceptions` in `acm-policies` namespace) deployed to all managed clusters by the `cm-rbac-exceptions-exists` enforce policy. Each key holds a newline-separated list of resource names to skip.
+
+Edit `policies/rbac/manifests/cm-rbac-exceptions.yaml` and add the resource name:
+
+```yaml
+data:
+  cis-cluster-admin: |
+    cluster-admin-0
+    my-trusted-admin-binding
+```
 
 ---
 
