@@ -139,16 +139,15 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 **Objectives:**
 
-- Verify that the violation `ocp4-cis-ocp-allowed-registries-for-import` is flagged by the `compliance-cis-results` policy.
+- Verify that the violations `ocp4-cis-ocp-allowed-registries-for-import` and `ocp4-cis-ocp-allowed-registries` are flagged by the `compliance-cis-results` policy.
 - Use the ACM ConfigurationPolicy to fix this violation flagged by the Compliance Operator scan.
 
 **Test Procedure**
 
 1. Go to ACM -> Governance, select the `CIS OpenShift Container Platform 4 Benchmark` standard and select the policy `compliance-cis-results`. Under this Policy you will find the template `cis-results`, that shows the violations raised against each cluster.
     - Select `cis-results`
-    - On the cluster template `cis-results`, press `View Details` to show the violations raised by `ocp4-cis`.
+    - On the cluster template `cis-results` for the `cluster1` cluster, press `View Details` to show the violations raised by `ocp4-cis`.
     - One of such violations is `ocp4-cis-ocp-allowed-registries` - press on it and a new window will open with the recommendation to fix it.
-    - The Placement is configured with the label `vendor=OpenShift`, so this configuration is enforced in all the clusters of the fleet, including the hub cluster.
 2. Create a new Policy to fix this control. This policy will be applied to all clusters because the placement is selecting the label `vendor: OpenShift`, which is configured in all clusters.
   - Copy the policy to the operators path, this will result that the applicationSet will create the Policy on the Hub
     ```bash
@@ -160,12 +159,13 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     git commit -m "added allowed registries"
     git push
     ```
-4. A new policy will be added to ACM HUB. This policy will be applied to all clusters.
+4. Result: A new policy will be added to ACM HUB. 
+    This policy will be applied to all clusters and will enforce the adding the trusted registries to import images and imagestreams. 
     ```bash
     oc -n acm-policies get policy allowed-registries
     ```
 
-**NOTE:** The `ocp4-cis-ocp-allowed-registries` will keep showing a violation until the Openshift compliance scan runs again.
+**NOTE: The `ocp4-cis-ocp-allowed-registries` will keep showing a violation until the Openshift compliance scan runs again.**
 
 ### Step B: Fix Kubeadmin
 
@@ -179,21 +179,13 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 **Test Procedure**
 
 1. Go to ACM -> Governance, select the `CIS OpenShift Container Platform 4 Benchmark` standard and select the policy `compliance-cis-results`. Under this Policy you will find the template `cis-results`, that shows the violations for each cluster.
-  - Select `cis-results`
-  - Select the template `cis-results` of the cluster named `cluster1`, press on the `View Details` textfield, this will show the Violations raised by `cis-ocp4`.
-  - one of such violations is `ocp4-cis-kubeadmin-removed`, press on top of this violation and a new window will open with the recommendation to fix it.
-  - Confirm the secret exists on a target cluster before enforcing, for example in cluster1:
-    ```bash
-    # Set your target cluster name
-    CLUSTER_NAME="cluster1"
-
-    # 1. Dynamically find the secret and extract the kubeconfig
-    SECRET_NAME=$(oc get secret -n $CLUSTER_NAME -o name | grep 'admin-kubeconfig')
-    oc extract $SECRET_NAME -n $CLUSTER_NAME --keys=kubeconfig --to=- > /tmp/${CLUSTER_NAME}-kubeconfig
-
-    # 2. Execute your command against the managed cluster
-    oc --kubeconfig=/tmp/${CLUSTER_NAME}-kubeconfig get secret kubeadmin -n kube-system
-    ```
+    - Select `cis-results`
+    - Select the template `cis-results` of the cluster named `cluster1`, press on the `View Details` textfield, this will show the Violations raised by `cis-ocp4`.
+    - one of such violations is `ocp4-cis-kubeadmin-removed`, press on top of this violation and a new window will open with the recommendation to fix it.
+    - Confirm the secret exists on a target cluster before enforcing, for example in cluster1:
+      ```bash
+      oc --kubeconfig=/tmp/${CLUSTER_NAME}-kubeconfig get secret kubeadmin -n kube-system
+      ```
 2. Create a Policy and required files under policies path
   - Copy the policy to the operators path, once changes are pushed to Git, this will result that the applicationSet will create the Policy on the Hub
     ```bash
@@ -206,20 +198,20 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
   git push
   ```
 4. A new policy will be added to ACM HUB
-  ```bash
-  oc -n acm-policies get policy kubeadmin-remove-enforce
-  ```
+    ```bash
+    oc -n acm-policies get policy kubeadmin-remove-enforce
+    ```
 5. Fix this violation on the selected clusters by labelling the clusters where this policy should be placed.
   To decide the clusters where this policy will be placed one must set a label into the clusters where it should be enforced.
-  - Label a the clusters to enforce the kubeadmin removal:
-    ```bash
-    oc label managedcluster cluster1 kubeadmin-enforce=true --overwrite
-    ```
-  - Confirm both policies now show Compliant for that cluster:
-  Wait for ArgoCD to sync and the policy to propagate, then verify the secret was deleted.
-    ```bash
-    oc get policy kubeadmin-remove-enforce -n acm-policies -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
-    ```
+    - Label a the clusters to enforce the kubeadmin removal:
+      ```bash
+      oc label managedcluster cluster1 kubeadmin-enforce=true --overwrite
+      ```
+    - Confirm both policies now show Compliant for that cluster:
+    Wait for ArgoCD to sync and the policy to propagate, then verify the secret was deleted.
+      ```bash
+      oc get policy kubeadmin-remove-enforce -n acm-policies -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
+      ```
 
 **NOTE: The `ocp4-cis-kubeadmin-removed` will keep showing a violation until the Openshift compliance scan runs again**.
 
@@ -514,6 +506,29 @@ oc get route openshift-gitops-server -n openshift-gitops
 oc get pod -n openshift-gitops -l app.kubernetes.io/name=openshift-gitops-dex-server
 oc get pod -n openshift-gitops -l app.kubernetes.io/name=openshift-gitops-applicationset-controller
 oc get gitopscluster -n openshift-gitops
+```
+
+## Compliance Operator
+
+```bash
+#Overall suite status (covers both scans)
+oc get ComplianceSuite cis-compliance -n openshift-compliance
+
+# Individual scan status
+oc get ComplianceScan -n openshift-compliance
+
+# Summary of all check results
+oc get ComplianceCheckResult -n openshift-compliance --no-headers
+
+# Failed checks only
+oc get ComplianceCheckResult -n openshift-compliance -l compliance.openshift.io/check-status=FAIL
+
+# Rerun scans:
+# Rescan ocp4-cis (platform checks)
+oc annotate compliancescans/ocp4-cis compliance.openshift.io/rescan= -n openshift-compliance
+# Rescan ocp4-cis-node (node-level checks)
+oc annotate compliancescans/ocp4-cis-node-master compliance.openshift.io/rescan= -n openshift-compliance
+oc annotate compliancescans/ocp4-cis-node-worker compliance.openshift.io/rescan= -n openshift-compliance
 ```
 
 ---
