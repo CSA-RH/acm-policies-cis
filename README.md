@@ -192,18 +192,18 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     cp -r auxiliar/kubeadmin policies/
     ```
 3. Push changes to GitHub
-  ```bash
-  git add policies/kubeadmin/*
-  git commit -m "policy kubeadmin"
-  git push
-  ```
+    ```bash
+    git add policies/kubeadmin/*
+    git commit -m "policy kubeadmin"
+    git push
+    ```
 4. A new policy will be added to ACM HUB
     ```bash
     oc -n acm-policies get policy kubeadmin-remove-enforce
     ```
 5. Fix this violation on the selected clusters by labelling the clusters where this policy should be placed.
   To decide the clusters where this policy will be placed one must set a label into the clusters where it should be enforced.
-    - Label a the clusters to enforce the kubeadmin removal:
+    - Label the clusters to enforce the kubeadmin removal:
       ```bash
       oc label managedcluster cluster1 kubeadmin-enforce=true --overwrite
       ```
@@ -468,44 +468,12 @@ data:
 
 # Auxiliary Commands
 
-## Force ArgoCD Sync
-
-```bash
-oc get applicationset -n openshift-gitops
-
-argocd app sync <app-name> --server openshift-gitops-server-openshift-gitops.apps.<cluster-domain>
-```
-
-Without the `argocd` CLI, trigger a sync via `oc`:
+## ArgoCD
+To force, via `argocd` CLI, to sync a application:
 
 ```bash
 oc -n openshift-gitops patch applications.argoproj.io <app_name> --type merge   -p '{"operation":{"initiatedBy":{"username"
 :"admin","automated":false},"sync":{"revision":"HEAD","prune":true}}}'
-```
-
-Sync all applications at once:
-
-```bash
-for app in $(oc get applications.argoproj.io -n openshift-gitops -o name); do
-  oc -n openshift-gitops patch "$app" --type merge \
-    -p '{"operation":{"initiatedBy":{"username":"admin","automated":false},"sync":{"revision":"HEAD","prune":true}}}'
-done
-```
-
-## Verify Hub Resources
-
-```bash
-oc get namespace acm-policies
-oc get clusterrole openshift-gitops-policy-admin
-oc get clusterrolebinding openshift-gitops-policy-admin
-oc get managedclusterset mceprod mcedev
-oc get managedclustersetbinding -n acm-policies
-oc get csv -n openshift-gitops-operator
-oc get argocd openshift-gitops -n openshift-gitops -o jsonpath='{.spec.repo.initContainers[0].name}'
-oc get route openshift-gitops-server -n openshift-gitops
-oc get pod -n openshift-gitops -l app.kubernetes.io/name=openshift-gitops-dex-server
-oc get pod -n openshift-gitops -l app.kubernetes.io/name=openshift-gitops-applicationset-controller
-oc get gitopscluster -n openshift-gitops
 ```
 
 ## Compliance Operator
@@ -524,9 +492,10 @@ oc get ComplianceCheckResult -n openshift-compliance --no-headers
 oc get ComplianceCheckResult -n openshift-compliance -l compliance.openshift.io/check-status=FAIL
 
 # Rerun scans:
-# Rescan ocp4-cis (platform checks)
+#1. Rescan ocp4-cis (platform checks)
 oc annotate compliancescans/ocp4-cis compliance.openshift.io/rescan= -n openshift-compliance
-# Rescan ocp4-cis-node (node-level checks)
+
+#2. Rescan ocp4-cis-node (node-level checks)
 oc annotate compliancescans/ocp4-cis-node-master compliance.openshift.io/rescan= -n openshift-compliance
 oc annotate compliancescans/ocp4-cis-node-worker compliance.openshift.io/rescan= -n openshift-compliance
 ```
