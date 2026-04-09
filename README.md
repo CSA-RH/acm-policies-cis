@@ -263,8 +263,8 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     oc get policy detect-anonymous-and-wildcard-rbac -n acm-policies \
       -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
     ```
-   The policy should show **NonCompliant** and the violation detail in the ACM Governance UI should list `test-unauth-access` for the ACM HUB cluster.
-4. Add a new the CRB name to the trusted list. Edit `policies/rbac/manifests/cis-rbac-controls.yaml` and add `"test-unauth-access"` to the `$allowedCRBs` list:
+   The policy `detect-anonymous-and-wildcard-rbac` should show **NonCompliant**, for the local-cluster, and the violation detail in the ACM Governance UI should list `test-unauth-access` for the ACM HUB cluster.
+4. Fix this violation by adding a new the CRB name to the trusted list. Edit `policies/rbac/manifests/cis-rbac-controls.yaml` and add `"test-unauth-access"` to the `$allowedCRBs` list:
     ```yaml
     {{- $allowedCRBs := list
           "test-unauth-access"
@@ -479,14 +479,14 @@ argocd app sync <app-name> --server openshift-gitops-server-openshift-gitops.app
 Without the `argocd` CLI, trigger a sync via `oc`:
 
 ```bash
-oc -n openshift-gitops patch app <app-name> --type merge \
-  -p '{"operation":{"initiatedBy":{"username":"admin","automated":false},"sync":{"revision":"HEAD","prune":true}}}'
+oc -n openshift-gitops patch applications.argoproj.io <app_name> --type merge   -p '{"operation":{"initiatedBy":{"username"
+:"admin","automated":false},"sync":{"revision":"HEAD","prune":true}}}'
 ```
 
 Sync all applications at once:
 
 ```bash
-for app in $(oc get applications -n openshift-gitops -o name); do
+for app in $(oc get applications.argoproj.io -n openshift-gitops -o name); do
   oc -n openshift-gitops patch "$app" --type merge \
     -p '{"operation":{"initiatedBy":{"username":"admin","automated":false},"sync":{"revision":"HEAD","prune":true}}}'
 done
