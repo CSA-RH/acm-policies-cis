@@ -271,11 +271,11 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     }}
     ```
 5. Commit and push:
-  ```bash
-   git add policies/rbac/manifests/cis-rbac-controls.yaml
-   git commit -m "test - add test-unauth-access to trusted CRBs"
-   git push
-  ```
+    ```bash
+    git add policies/rbac/manifests/cis-rbac-controls.yaml
+    git commit -m "test - add test-unauth-access to trusted CRBs"
+    git push
+    ```
 6. Wait for ArgoCD to sync and the next policy evaluation cycle (1–2 minutes). Verify the violation for `test-unauth-access` is cleared in the ACM Governance UI.
 7. **Clean up** - remove the test CRB and revert the trusted list:
     ```bash
@@ -313,11 +313,11 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     }}
     ```
 5. Commit and push:
-  ```bash
-   git add policies/rbac/manifests/cis-rbac-controls.yaml
-   git commit -m "test: add test-wildcard-role/test-wildcard to trusted roles"
-   git push
-  ```
+    ```bash
+    git add policies/rbac/manifests/cis-rbac-controls.yaml
+    git commit -m "test: add test-wildcard-role/test-wildcard to trusted roles"
+    git push
+    ```
 6. Wait for ArgoCD to sync and the next policy evaluation cycle (1–2 minutes). Verify the violation for `test-wildcard` is cleared in the ACM Governance UI.
 7. **Clean up** - remove the test namespace and revert the trusted list:
     ```bash
