@@ -222,23 +222,23 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 - Run the Compliance operator scan, and verify that the previous checks were fixed. The scan may take several minutes.
 
 1. Scan all clusters
-  ```bash
-  oc annotate compliancescans/ocp4-cis compliance.openshift.io/rescan= -n openshift-compliance
-  oc --kubeconfig=/tmp/cluster1-kubeconfig annotate compliancescans/ocp4-cis compliance.openshift.io/rescan= -n openshift-compliance
-  ```
+    ```bash
+    oc annotate compliancescans/ocp4-cis compliance.openshift.io/rescan= -n openshift-compliance
+    oc --kubeconfig=/tmp/cluster1-kubeconfig annotate compliancescans/ocp4-cis compliance.openshift.io/rescan= -n openshift-compliance
+    ```
 2. check the state of the new scan
-  ```bash
-  oc get ComplianceSuite -n openshift-compliance
-  oc --kubeconfig=/tmp/cluster1-kubeconfig get ComplianceSuite -n openshift-compliance
-  ```
+    ```bash
+    oc get ComplianceSuite -n openshift-compliance
+    oc --kubeconfig=/tmp/cluster1-kubeconfig get ComplianceSuite -n openshift-compliance
+    ```
 3. Once the scan is completed check the state of the controls
   - The `cluster1` is not violating the `ocp4-cis-kubeadmin-removed` nor the allowed `ocp4-cis-ocp-allowed-registries`. 
   - And the local-cluster will not show the `ocp4-cis-ocp-allowed-registries` violation
-  ```bash
-  oc get compliancecheckresult ocp4-cis-ocp-allowed-registries -n openshift-compliance -o jsonpath='{.status}'
+    ```bash
+    oc get compliancecheckresult ocp4-cis-ocp-allowed-registries -n openshift-compliance -o jsonpath='{.status}'
 
-  oc --kubeconfig=/tmp/cluster1-kubeconfig get compliancecheckresult ocp4-cis-ocp-allowed-registries -n openshift-compliance -o jsonpath='{.status}'
-  ```
+    oc --kubeconfig=/tmp/cluster1-kubeconfig get compliancecheckresult ocp4-cis-ocp-allowed-registries -n openshift-compliance -o jsonpath='{.status}'
+    ```
 
 ---
 
@@ -389,10 +389,10 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-deny \
       --clusterrole=cluster-admin --user=toni
     ```
-  Expected output:
-  ```
-  error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io "test-vap-deny" is forbidden: ValidatingAdmissionPolicy 'cluster-admin-allow-list' with binding 'cluster-admin-allow-list-binding' denied request: ClusterRoleBinding to cluster-admin contains subjects not on the allow-list. Only approved users, groups, and service accounts can be bound to cluster-admin.
-  ```
+    Expected output:
+    ```
+    error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io "test-vap-deny" is forbidden: ValidatingAdmissionPolicy 'cluster-admin-allow-list' with binding 'cluster-admin-allow-list-binding' denied request: ClusterRoleBinding to cluster-admin contains subjects not on the allow-list. Only approved users, groups, and service accounts can be bound to cluster-admin.
+    ```
 4. **Test: bind the same unauthorized user to a non-`cluster-admin` role.** This should be **accepted** - the VAP only restricts bindings to `cluster-admin`, other ClusterRoles (e.g. `view`, `edit`) are not affected:
     ```bash
     oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-view \
@@ -469,9 +469,9 @@ data:
 # Auxiliary Commands
 
 ## ArgoCD
-To force, via `argocd` CLI, to sync a application:
 
 ```bash
+#To force, via `argocd` CLI, to sync a application
 oc -n openshift-gitops patch applications.argoproj.io <app_name> --type merge   -p '{"operation":{"initiatedBy":{"username"
 :"admin","automated":false},"sync":{"revision":"HEAD","prune":true}}}'
 ```
