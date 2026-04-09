@@ -255,21 +255,21 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 1. Open the **ACM Console → Governance** dashboard. Select the `CIS OpenShift Container Platform 4 Benchmark` standard. Locate the policy `detect-anonymous-and-wildcard-rbac` and review the current violations for the `rbac-no-unauth-access` template. Note the existing violations (if any).
 2. Create on the ACM Hub (local-cluster), a test ClusterRoleBinding that grants the `view` ClusterRole to the group `system:unauthenticated`:
-  ```bash
-   oc create clusterrolebinding test-unauth-access --clusterrole=view --group=system:unauthenticated
-  ```
+    ```bash
+    oc create clusterrolebinding test-unauth-access --clusterrole=view --group=system:unauthenticated
+    ```
 3. Wait for the next policy evaluation cycle (1–2 minutes) or check the policy status with:
-  ```bash
-   oc get policy detect-anonymous-and-wildcard-rbac -n acm-policies \
-     -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
-  ```
+    ```bash
+    oc get policy detect-anonymous-and-wildcard-rbac -n acm-policies \
+      -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
+    ```
    The policy should show **NonCompliant** and the violation detail in the ACM Governance UI should list `test-unauth-access` for the ACM HUB cluster.
 4. Add a new the CRB name to the trusted list. Edit `policies/rbac/manifests/cis-rbac-controls.yaml` and add `"test-unauth-access"` to the `$allowedCRBs` list:
-  ```yaml
-   {{- $allowedCRBs := list
-         "test-unauth-access"
-   }}
-  ```
+    ```yaml
+    {{- $allowedCRBs := list
+          "test-unauth-access"
+    }}
+    ```
 5. Commit and push:
   ```bash
    git add policies/rbac/manifests/cis-rbac-controls.yaml
@@ -278,10 +278,10 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
   ```
 6. Wait for ArgoCD to sync and the next policy evaluation cycle (1–2 minutes). Verify the violation for `test-unauth-access` is cleared in the ACM Governance UI.
 7. **Clean up** - remove the test CRB and revert the trusted list:
-  ```bash
-   oc delete clusterrolebinding test-unauth-access
-  ```
-   Then remove `"test-unauth-access"` from `$allowedCRBs` in `cis-rbac-controls.yaml`, commit and push.
+    ```bash
+    oc delete clusterrolebinding test-unauth-access
+    ```
+    Then remove `"test-unauth-access"` from `$allowedCRBs` in `cis-rbac-controls.yaml`, commit and push.
 
 ### Step B: Trigger `rbac-no-wildcard-roles` - Wildcard Role Detection
 
@@ -294,24 +294,24 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 1. Open the **ACM Console → Governance** dashboard. Locate the policy `detect-anonymous-and-wildcard-rbac` and review the current violations for the `rbac-no-wildcard-roles` template. Note the existing violations (if any).
 2. Create a test namespace and a Role with full wildcard permissions:
-  ```bash
-   oc new-project test-wildcard-role
-   oc create role test-wildcard --verb='*' --resource='*.*' -n test-wildcard-role
-  ```
+    ```bash
+    oc new-project test-wildcard-role
+    oc create role test-wildcard --verb='*' --resource='*.*' -n test-wildcard-role
+    ```
    Verify the Role was created with the expected wildcard rules:
    Confirm the `rules` section contains `apiGroups: ["*"]`, `resources: ["*"]`, `verbs: ["*"]`.
 3. Wait for the next policy evaluation cycle (1–2 minutes) or check the policy status with:
-  ```bash
-   oc get policy detect-anonymous-and-wildcard-rbac -n acm-policies \
-     -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
-  ```
+    ```bash
+    oc get policy detect-anonymous-and-wildcard-rbac -n acm-policies \
+      -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
+    ```
    The policy should show **NonCompliant** and the violation detail in the ACM Governance UI should list `test-wildcard` in namespace `test-wildcard-role`.
 4. Add the Role to the trusted list. Edit `policies/rbac/manifests/cis-rbac-controls.yaml` and add `"test-wildcard-role/test-wildcard"` to the `$allowedRoles` list:
-  ```yaml
-   {{- $allowedRoles := list
-         "test-wildcard-role/test-wildcard"
-   }}
-  ```
+    ```yaml
+    {{- $allowedRoles := list
+          "test-wildcard-role/test-wildcard"
+    }}
+    ```
 5. Commit and push:
   ```bash
    git add policies/rbac/manifests/cis-rbac-controls.yaml
@@ -320,10 +320,10 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
   ```
 6. Wait for ArgoCD to sync and the next policy evaluation cycle (1–2 minutes). Verify the violation for `test-wildcard` is cleared in the ACM Governance UI.
 7. **Clean up** - remove the test namespace and revert the trusted list:
-  ```bash
-   oc delete project test-wildcard-role
-  ```
-   Then remove `"test-wildcard-role/test-wildcard"` from `$allowedRoles` in `cis-rbac-controls.yaml`, commit and push.
+    ```bash
+    oc delete project test-wildcard-role
+    ```
+    Then remove `"test-wildcard-role/test-wildcard"` from `$allowedRoles` in `cis-rbac-controls.yaml`, commit and push.
 
 ### Step C: Fix Unauthorized CRB to cluster-admin CR
 
@@ -335,30 +335,30 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 **Test Procedure**
 
 1. Create a ServiceAccount in a user namespace and bind it to `cluster-admin`:
-  ```bash
-  oc new-project test-cis
-  oc create sa test-sa -n test-cis
-  oc adm policy add-cluster-role-to-user cluster-admin -z test-sa -n test-cis
-  ```
+    ```bash
+    oc new-project test-cis
+    oc create sa test-sa -n test-cis
+    oc adm policy add-cluster-role-to-user cluster-admin -z test-sa -n test-cis
+    ```
   A new ClusterRoleBinding is created, binding the SA to the cluster-admin `ClusterRole`. Policy `cis-cluster-admin` will flag it as **Non-Compliant**.
 2. Configure the CRB to be trusted by adding the CRB name to `policies/rbac/manifests/cm-rbac-exceptions.yaml` under `cis-cluster-admin: |`:
-  ```yaml
-  data:
-    cis-cluster-admin: |
-      <crb-name>
-  ```
+    ```yaml
+    data:
+      cis-cluster-admin: |
+        <crb-name>
+    ```
 3. Push changes to GitHub:
-  ```bash
-  git add policies/rbac/manifests/cm-rbac-exceptions.yaml
-  git commit -m "rbac cluster-admin exception"
-  git push
-  ```
+    ```bash
+    git add policies/rbac/manifests/cm-rbac-exceptions.yaml
+    git commit -m "rbac cluster-admin exception"
+    git push
+    ```
 4. Wait for ArgoCD to sync. The violation is cleared.
 5. **Clean up** - remove the test resources and revert the exception:
-  ```bash
-  oc delete project test-cis
-  ```
-  Then remove the CRB name from `cm-rbac-exceptions.yaml`, commit and push.
+    ```bash
+    oc delete project test-cis
+    ```
+    Then remove the CRB name from `cm-rbac-exceptions.yaml`, commit and push.
 
 ---
 
@@ -374,41 +374,41 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 **Test Procedure**
 
 1. Verify the ACM policy is created and distributed:
-  ```bash
-   oc get policy cluster-admin-allow-list -n acm-policies
-   oc get policy cluster-admin-allow-list -n acm-policies \
-     -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
-  ```
+    ```bash
+    oc get policy cluster-admin-allow-list -n acm-policies
+    oc get policy cluster-admin-allow-list -n acm-policies \
+      -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
+    ```
 2. Confirm the ValidatingAdmissionPolicy and its binding exist on a managed cluster:
-  ```bash
-   oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicy cluster-admin-allow-list
-   oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicybinding cluster-admin-allow-list-binding
-  ```
+    ```bash
+    oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicy cluster-admin-allow-list
+    oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicybinding cluster-admin-allow-list-binding
+    ```
 3. **Test: bind an unauthorized user to the ClusterRole `cluster-admin`.** This should be **denied** - the user `toni` is not on the allow-list:
-  ```bash
-   oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-deny \
-     --clusterrole=cluster-admin --user=toni
-  ```
+    ```bash
+    oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-deny \
+      --clusterrole=cluster-admin --user=toni
+    ```
   Expected output:
   ```
   error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io "test-vap-deny" is forbidden: ValidatingAdmissionPolicy 'cluster-admin-allow-list' with binding 'cluster-admin-allow-list-binding' denied request: ClusterRoleBinding to cluster-admin contains subjects not on the allow-list. Only approved users, groups, and service accounts can be bound to cluster-admin.
   ```
 4. **Test: bind the same unauthorized user to a non-`cluster-admin` role.** This should be **accepted** - the VAP only restricts bindings to `cluster-admin`, other ClusterRoles (e.g. `view`, `edit`) are not affected:
-  ```bash
-   oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-view \
-     --clusterrole=view --user=toni
-  ```
+    ```bash
+    oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-view \
+      --clusterrole=view --user=toni
+    ```
   Expected output: `clusterrolebinding.rbac.authorization.k8s.io/test-vap-view created`
 5. **Test: bind an allowed user to `cluster-admin`.** This should be **accepted** - `system:admin` is on the allow-list:
-  ```bash
-   oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-allow \
-     --clusterrole=cluster-admin --user=system:admin
-  ```
+    ```bash
+    oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-allow \
+      --clusterrole=cluster-admin --user=system:admin
+    ```
    Expected output: `clusterrolebinding.rbac.authorization.k8s.io/test-vap-allow created`
 6. **Clean up** - remove the test CRBs:
-  ```bash
-   oc --kubeconfig=/tmp/cluster1-kubeconfig delete clusterrolebinding test-vap-view test-vap-allow
-  ```
+    ```bash
+    oc --kubeconfig=/tmp/cluster1-kubeconfig delete clusterrolebinding test-vap-view test-vap-allow
+    ```
 
 **Admission control vs. continuous compliance**
 
@@ -535,6 +535,5 @@ oc annotate compliancescans/ocp4-cis-node-worker compliance.openshift.io/rescan=
 
 # References
 
-- [Multicluster Role Assignment Operator](https://github.com/stolostron/multicluster-role-assignment)
-- [RBAC Model Around Cluster Sets in RHACM](https://www.redhat.com/en/blog/rbac-model-around-cluster-sets-in-red-hat-advanced-cluster-management-for-kubernetes)
-- [ACM Policy Samples - ACS Install](https://github.com/bry-tam/acm-policy-samples/tree/main/policies/operators/)
+- [ACM Policy Samples](https://github.com/stolostron/????????????)
+- [ACM Policy Samples](https://github.com/bry-tam/acm-policy-samples/tree/main/policies/operators/)
