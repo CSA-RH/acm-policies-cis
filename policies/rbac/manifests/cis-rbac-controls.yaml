@@ -74,7 +74,6 @@ spec:
     {{- /* ---- Trusted Roles: add "namespace/rolename" entries to skip ---- */ -}}
     {{- $allowedRoles := list
           "namespace/rolename"
-          "test-wildcard-role/test-wildcard2"
     }}
 
     {{- /* Platform namespace prefixes and exact names to exclude from scanning */ -}}
