@@ -9,7 +9,6 @@
 # RBAC objects — those require deliberate human review.
 
 # --- Check 1: no ClusterRoleBinding grants rights to unauthenticated/anonymous users ---
-# Uses object-templates-raw to skip known-safe OpenShift default CRBs.
 # Any other CRB with system:unauthenticated or system:anonymous subjects is flagged.
 #
 # TRUSTED ENTITIES: to suppress a false positive, add the CRB name to $allowedCRBs below.
@@ -58,6 +57,9 @@ spec:
 # --- Check 2: no user-namespace Role allows wildcard verbs on all resources ---
 # This catches over-privileged roles that would allow secrets/pod access and more.
 # Platform namespaces are excluded by prefix/name. User namespaces are scanned.
+
+# scoped to namespaced Role objects in user/workload namespaces. 
+# It reports as NonCompliant any Role containing a rule that is a full triple-wildcard (* apiGroups AND * resources AND * verbs), i.e. "allow anything on anything."
 #
 # TRUSTED ENTITIES: to suppress a false positive, add "namespace/rolename" to
 # $allowedRoles below (e.g. "my-ns/my-admin-role").
