@@ -2,7 +2,7 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
-  name: cluster-admin-allow-list
+  name: vap-cluster-admin-allow-list
 spec:
   failurePolicy: Fail
   matchConstraints:
@@ -67,7 +67,7 @@ spec:
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
 metadata:
-  name: cluster-admin-allow-list-binding
+  name: vap-cluster-admin-allow-list-binding
 spec:
-  policyName: cluster-admin-allow-list
+  policyName: vap-cluster-admin-allow-list
   validationActions: ["Deny"]

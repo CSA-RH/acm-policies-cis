@@ -39,7 +39,7 @@ All policies carry three ACM metadata fields used for filtering and grouping in 
 | Compliance | `compliance-operator`                | All OpenShift clusters   | `operators/compliance-operator/` | Installs the Compliance Operator (namespace, OperatorPolicy, OperatorGroup)                                                |
 | Compliance | `compliance-cis-scan`                | All OpenShift clusters   | `operators/compliance-operator/` | Deploys CIS ScanSetting + ScanSettingBinding                                                                               |
 | Compliance | `compliance-cis-results`             | All OpenShift clusters   | `operators/compliance-operator/` | Reports failed CIS ComplianceCheckResults - non-compliant when checks fail                                                 |
-| VAP        | `cluster-admin-allow-list`           | All OpenShift clusters   | `policies/vap/`                  | Deploys a ValidatingAdmissionPolicy that denies ClusterRoleBindings to `cluster-admin` with subjects not on the allow-list |
+| VAP        | `vap-cluster-admin-allow-list`           | All OpenShift clusters   | `policies/vap/`                  | Deploys a ValidatingAdmissionPolicy that denies ClusterRoleBindings to `cluster-admin` with subjects not on the allow-list |
 
 
 ---
@@ -375,14 +375,14 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 1. Verify the ACM policy is created and distributed:
     ```bash
-    oc get policy cluster-admin-allow-list -n acm-policies
-    oc get policy cluster-admin-allow-list -n acm-policies \
+    oc get policy vap-cluster-admin-allow-list -n acm-policies
+    oc get policy vap-cluster-admin-allow-list -n acm-policies \
       -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
     ```
 2. Confirm the ValidatingAdmissionPolicy and its binding exist on a managed cluster:
     ```bash
-    oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicy cluster-admin-allow-list
-    oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicybinding cluster-admin-allow-list-binding
+    oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicy vap-cluster-admin-allow-list
+    oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicybinding vap-cluster-admin-allow-list-binding
     ```
 3. **Test: bind an unauthorized user to the ClusterRole `cluster-admin`.** This should be **denied** - the user `toni` is not on the allow-list:
     ```bash
@@ -391,7 +391,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     ```
     Expected output:
     ```
-    error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io "test-vap-deny" is forbidden: ValidatingAdmissionPolicy 'cluster-admin-allow-list' with binding 'cluster-admin-allow-list-binding' denied request: ClusterRoleBinding to cluster-admin contains subjects not on the allow-list. Only approved users, groups, and service accounts can be bound to cluster-admin.
+    error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io "test-vap-deny" is forbidden: ValidatingAdmissionPolicy 'vap-cluster-admin-allow-list' with binding 'vap-cluster-admin-allow-list-binding' denied request: ClusterRoleBinding to cluster-admin contains subjects not on the allow-list. Only approved users, groups, and service accounts can be bound to cluster-admin.
     ```
 4. **Test: bind the same unauthorized user to a non-`cluster-admin` role.** This should be **accepted** - the VAP only restricts bindings to `cluster-admin`, other ClusterRoles (e.g. `view`, `edit`) are not affected:
     ```bash
@@ -423,7 +423,7 @@ A ValidatingAdmissionPolicy is an **admission controller** - it only validates A
 
 Both approaches are **complementary**:
 
-- **`cluster-admin-allow-list`** (VAP) - **prevents** anyone from creating a *new* unauthorized CRB to `cluster-admin` going forward.
+- **`vap-cluster-admin-allow-list`** (VAP) - **prevents** anyone from creating a *new* unauthorized CRB to `cluster-admin` going forward.
 - **`cis-cluster-admin`** (ConfigurationPolicy) - **detects** pre-existing non-compliant CRBs by scanning all ClusterRoleBindings on every evaluation cycle.
 
 ---
