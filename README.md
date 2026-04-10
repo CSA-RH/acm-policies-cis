@@ -440,32 +440,6 @@ oc label managedcluster <cluster-name> <label-key>=<label-value> --overwrite
 
 ---
 
-# Handling False Positives
-
-When a policy flags a resource that is intentionally configured (e.g., a trusted user who should have `cluster-admin`), you can suppress the violation. RBAC policies use two different exception mechanisms depending on the policy:
-
-**Example 1 - Inline trusted list** (used by `detect-anonymous-and-wildcard-rbac`)
-
-The `rbac-no-unauth-access` and `rbac-no-wildcard-roles` ConfigurationPolicies each contain an inline trusted-entity list directly in `policies/rbac/manifests/cis-rbac-controls.yaml`. Add entries to suppress false positives:
-
-- `$allowedCRBs` - CRB names to skip in `rbac-no-unauth-access` (e.g. `"my-trusted-crb"`)
-- `$allowedRoles` - `"namespace/rolename"` entries to skip in `rbac-no-wildcard-roles`
-
-**Example 2 - Exceptions ConfigMap** (used by `cis-cluster-admin`)
-
-The `cis-cluster-admin` policy reads exceptions from a ConfigMap (`rbac-policy-exceptions` in `acm-policies` namespace) deployed to all managed clusters by the `cm-rbac-exceptions-exists` enforce policy. Each key holds a newline-separated list of resource names to skip.
-
-Edit `policies/rbac/manifests/cm-rbac-exceptions.yaml` and add the resource name:
-
-```yaml
-data:
-  cis-cluster-admin: |
-    cluster-admin-0
-    my-trusted-admin-binding
-```
-
----
-
 # Auxiliary Commands
 
 ## ArgoCD
