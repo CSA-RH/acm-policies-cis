@@ -376,7 +376,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicy vap-cluster-admin-allow-list
     oc --kubeconfig=/tmp/cluster1-kubeconfig get validatingadmissionpolicybinding vap-cluster-admin-allow-list-binding
     ```
-3. **Test: bind an unauthorized user to the ClusterRole `cluster-admin`.** This should be **denied** - the user `toni` is not on the allow-list:
+3. **Test: bind an unauthorized user to the ClusterRole `cluster-admin`.** This should be **denied** - the user `toni` is not on the allow-list. Users/SA/Groups trust-list are under parameter `object.subjects.all(`, under the file `policies/vap/manifests/vap-cluster-admin-allow-list.yaml`.
     ```bash
     oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-deny \
       --clusterrole=cluster-admin --user=toni
@@ -385,10 +385,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     ```
     error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io "test-vap-deny" is forbidden: ValidatingAdmissionPolicy 'vap-cluster-admin-allow-list' with binding 'vap-cluster-admin-allow-list-binding' denied request: ClusterRoleBinding to cluster-admin contains subjects not on the allow-list. Only approved users, groups, and service accounts can be bound to cluster-admin.
     ```
-4. **Test: bind the same unauthorized user to a non-`cluster-admin` role.** This should be **accepted** - the VAP only restricts bindings to `cluster-admin`, other ClusterRoles (e.g. `view`, `edit`) are not affected:
-
-**NOTE:** Users/SA/Groups trust-list are under parameter `object.subjects.all(`, in file `policies/vap/manifests/vap-cluster-admin-allow-list.yaml`
-
+4. **Test: bind the same unauthorized user to a non-`cluster-admin` role.** This should be **accepted** - the VAP only restricts bindings to `cluster-admin`, other ClusterRoles (e.g. `view`, `edit`) are -not affected:
     ```bash
     oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-view \
       --clusterrole=view --user=toni
@@ -419,19 +416,7 @@ A ValidatingAdmissionPolicy is an **admission controller** - it only validates A
 Both approaches are **complementary**:
 
 - **`vap-cluster-admin-allow-list`** (VAP) - **prevents** anyone from creating a *new* unauthorized CRB to `cluster-admin` going forward.
-- **`cis-cluster-admin`** (ConfigurationPolicy) - **detects** pre-existing non-compliant CRBs by scanning all ClusterRoleBindings on every evaluation cycle.
-
----
-
-# Grouping Clusters (`hub/clustergroups/`)
-
-After importing managed clusters into ACM, you can assign them to cluster sets by adding labels to the clusters. This enables policy placements to target specific groups of clusters - for example, applying stricter policies to production or different operator configurations to development.
-
-**Command structure:**
-
-```bash
-oc label managedcluster <cluster-name> <label-key>=<label-value> --overwrite
-```
+- **`cis-cluster-admin`** (ConfigurationPolicy) - **detects** non-compliant CRBs by scanning all ClusterRoleBindings on every evaluation cycle.
 
 ---
 
