@@ -400,8 +400,6 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     oc --kubeconfig=/tmp/cluster1-kubeconfig delete clusterrolebinding test-vap-view test-vap-allow
     ```
 
-**Admission control vs. continuous compliance**
-
 A ValidatingAdmissionPolicy is an **admission controller** - it only validates API requests at `CREATE` or `UPDATE` time. It does **not** retroactively scan resources that already exist on the cluster.
 
 ---
