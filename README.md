@@ -259,8 +259,6 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     oc new-project test-wildcard-role
     oc create role test-wildcard --verb='*' --resource='*.*' -n test-wildcard-role
     ```
-   Verify the Role was created with the expected wildcard rules:
-   Confirm the `rules` section contains `apiGroups: ["*"]`, `resources: ["*"]`, `verbs: ["*"]`.
 3. Wait for the next policy evaluation cycle (1–2 minutes) or check the policy status with:
     ```bash
     oc get policy detect-anonymous-and-wildcard-rbac -n acm-policies \
@@ -390,13 +388,13 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-view \
       --clusterrole=view --user=toni
     ```
-  Expected output: `clusterrolebinding.rbac.authorization.k8s.io/test-vap-view created`
+    Expected output: `clusterrolebinding.rbac.authorization.k8s.io/test-vap-view created`
 5. **Test: bind an allowed user to `cluster-admin`.** This should be **accepted** - `system:admin` is on the allow-list:
     ```bash
     oc --kubeconfig=/tmp/cluster1-kubeconfig create clusterrolebinding test-vap-allow \
       --clusterrole=cluster-admin --user=system:admin
     ```
-   Expected output: `clusterrolebinding.rbac.authorization.k8s.io/test-vap-allow created`
+    Expected output: `clusterrolebinding.rbac.authorization.k8s.io/test-vap-allow created`
 6. **Clean up** - remove the test CRBs:
     ```bash
     oc --kubeconfig=/tmp/cluster1-kubeconfig delete clusterrolebinding test-vap-view test-vap-allow
