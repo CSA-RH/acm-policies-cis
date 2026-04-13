@@ -70,4 +70,4 @@ metadata:
   name: vap-cluster-admin-allow-list-binding
 spec:
   policyName: vap-cluster-admin-allow-list
-  validationActions: ["Deny"]
+  validationActions: ["Deny", "Audit", "Warn"]
