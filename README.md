@@ -54,7 +54,7 @@ The deployment has three phases:
     - Apply ACM namespace, RBAC, ManagedClusterSets, and ManagedClusterSetBindings to the hub cluster.
     - Deploy Policy to install **GitOps operator** and configure ArgoCD with the PolicyGenerator plugin.
 2. **Policy and operator deployment:** Deploy ACM policies and install Compliance Operator to all clusters using a GitOps aproach.
-3. In the exercises chapter, create/copy new policies.
+3. In the exercises chapter, create new policies.
 
 ## Prerequisites
 
@@ -153,7 +153,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     ```bash
     cp -r auxiliar/registries policies/
     ```
-3. Push changes to GitHub
+3. Push changes to GitHub - **To save time, as ArgoCD will take a couple of minutes to sync each time a new directory is added, you can jump to step B and create the kubeadmin remove policy as well. And only then sync the git repository**
     ```bash
     git add policies/registries/*
     git commit -m "added allowed registries"
@@ -207,7 +207,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
       ```bash
       oc label managedcluster cluster1 kubeadmin-enforce=true --overwrite
       ```
-    - Confirm both policies now show Compliant for that cluster:
+    - Confirm the policy is Compliant for `cluster1`:
     Wait for ArgoCD to sync and the policy to propagate, then verify the secret was deleted.
       ```bash
       oc get policy kubeadmin-remove-enforce -n acm-policies -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
@@ -242,48 +242,9 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 ---
 
-## Demo 2: Demo 2: Bring Your Own policy for CIS benchmark manual checks
+## Demo 2: Bring Your Own policy for CIS benchmark manual checks
 
-### Step A: Fix `rbac-no-unauth-access` - Unauthenticated CRB Detection
-
-**Objectives:**
-
-- Verify that a `ClusterRoleBinding` granting access to `system:unauthenticated` is flagged by the `detect-anonymous-and-wildcard-rbac` policy, (template `rbac-no-unauth-access`).
-- Verify how to whitelist CRB and CR, adding inline in the policy the trusted ones. This whitelist contains a list of trusted CBR and CR - `$allowedCRBs` and `$allowedRoles`
-
-**Test Procedure**
-
-1. Open the **ACM Console → Governance** dashboard. Select the `CIS OpenShift Container Platform 4 Benchmark` standard. Locate the policy `detect-anonymous-and-wildcard-rbac` and review the current violations, for the `rbac-no-unauth-access` template. Note the existing violations (if any).
-2. Create on the ACM Hub (local-cluster), a test ClusterRoleBinding that grants the `view` ClusterRole to the group `system:unauthenticated`:
-    ```bash
-    oc create clusterrolebinding test-unauth-access --clusterrole=view --group=system:unauthenticated
-    ```
-3. Wait for the next policy evaluation cycle (1–2 minutes) or check the policy status with:
-    ```bash
-    oc get policy detect-anonymous-and-wildcard-rbac -n acm-policies \
-      -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
-    ```
-   The policy `detect-anonymous-and-wildcard-rbac` should show **NonCompliant**, for the local-cluster, and the violation detail in the ACM Governance UI should list the violating CRB `test-unauth-access`.
-4. Fix this violation by adding a new the CRB name to the trusted list. Edit `policies/rbac/manifests/cis-rbac-controls.yaml` and add `"test-unauth-access"` to the `$allowedCRBs` list:
-    ```yaml
-    {{- $allowedCRBs := list
-          "test-unauth-access"
-    }}
-    ```
-5. Commit and push:
-    ```bash
-    git add policies/rbac/manifests/cis-rbac-controls.yaml
-    git commit -m "test - add test-unauth-access to trusted CRBs"
-    git push
-    ```
-6. Wait for ArgoCD to sync. Verify the violation for `test-unauth-access` CRB is cleared in the ACM Governance UI.
-7. **Clean up** - remove the test CRB and revert the trusted list:
-    ```bash
-    oc delete clusterrolebinding test-unauth-access
-    ```
-    Then remove `"test-unauth-access"` from `$allowedCRBs` in `cis-rbac-controls.yaml`, commit and push.
-
-### Step B: Trigger `rbac-no-wildcard-roles` - Wildcard Role Detection
+### Step A: Trigger `rbac-no-wildcard-roles` - Wildcard Role Detection
 
 **Objectives:**
 
@@ -324,6 +285,45 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     oc delete project test-wildcard-role
     ```
     Then remove `"test-wildcard-role/test-wildcard"` from `$allowedRoles` in `cis-rbac-controls.yaml`, commit and push.
+
+### Step B: Fix `rbac-no-unauth-access` - Unauthenticated CRB Detection
+
+**Objectives:**
+
+- Verify that a `ClusterRoleBinding` granting access to `system:unauthenticated` is flagged by the `detect-anonymous-and-wildcard-rbac` policy, (template `rbac-no-unauth-access`).
+- Verify how to whitelist CRB and CR, adding inline in the policy the trusted ones. This whitelist contains a list of trusted CBR and CR - `$allowedCRBs` and `$allowedRoles`
+
+**Test Procedure**
+
+1. Open the **ACM Console → Governance** dashboard. Select the `CIS OpenShift Container Platform 4 Benchmark` standard. Locate the policy `detect-anonymous-and-wildcard-rbac` and review the current violations, for the `rbac-no-unauth-access` template. Note the existing violations (if any).
+2. Create on the ACM Hub (local-cluster), a test ClusterRoleBinding that grants the `view` ClusterRole to the group `system:unauthenticated`:
+    ```bash
+    oc create clusterrolebinding test-unauth-access --clusterrole=view --group=system:unauthenticated
+    ```
+3. Wait for the next policy evaluation cycle (1–2 minutes) or check the policy status with:
+    ```bash
+    oc get policy detect-anonymous-and-wildcard-rbac -n acm-policies \
+      -o jsonpath='{range .status.status[*]}{.clustername}: {.compliant}{"\n"}{end}'
+    ```
+   The policy `detect-anonymous-and-wildcard-rbac` should show **NonCompliant**, for the local-cluster, and the violation detail in the ACM Governance UI should list the violating CRB `test-unauth-access`.
+4. Fix this violation by adding a new the CRB name to the trusted list. Edit `policies/rbac/manifests/cis-rbac-controls.yaml` and add `"test-unauth-access"` to the `$allowedCRBs` list:
+    ```yaml
+    {{- $allowedCRBs := list
+          "test-unauth-access"
+    }}
+    ```
+5. Commit and push:
+    ```bash
+    git add policies/rbac/manifests/cis-rbac-controls.yaml
+    git commit -m "test - add test-unauth-access to trusted CRBs"
+    git push
+    ```
+6. Wait for ArgoCD to sync. Verify the violation for `test-unauth-access` CRB is cleared in the ACM Governance UI.
+7. **Clean up** - remove the test CRB and revert the trusted list:
+    ```bash
+    oc delete clusterrolebinding test-unauth-access
+    ```
+    Then remove `"test-unauth-access"` from `$allowedCRBs` in `cis-rbac-controls.yaml`, commit and push.
 
 ### Step C: Fix Unauthorized CRB to cluster-admin CR
 

@@ -1,4 +1,3 @@
-# CIS-OCP 5.1.1 — Ensure cluster-admin role is only used where required
 # CIS-OCP 5.1.2 — Minimize access to secrets
 # CIS-OCP 5.1.4 — Minimize access to create pods
 # CIS-OCP 5.2.10 — Ensure no RBAC policies allow wildcard use
