@@ -402,19 +402,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 **Admission control vs. continuous compliance**
 
-A ValidatingAdmissionPolicy is an **admission controller** - it only validates API requests at `CREATE` or `UPDATE` time. It does **not** retroactively scan resources that already exist on the cluster. For example, if a ClusterRoleBinding named `cluster-admin-0` existed before the VAP was deployed, the VAP will not flag it because no admission request was intercepted for that resource.
-
-
-| Approach                              | When it acts             | Existing resources?     | Example                 |
-| ------------------------------------- | ------------------------ | ----------------------- | ----------------------- |
-| **Admission control** (preventive)    | At CREATE/UPDATE time    | No - only new requests  | VAP                     |
-| **Continuous compliance** (detective) | Periodic evaluation loop | Yes - scans what exists | ACM ConfigurationPolicy |
-
-
-Both approaches are **complementary**:
-
-- **`vap-cluster-admin-allow-list`** (VAP) - **prevents** anyone from creating a *new* unauthorized CRB to `cluster-admin` going forward.
-- **`cis-cluster-admin`** (ConfigurationPolicy) - **detects** non-compliant CRBs by scanning all ClusterRoleBindings on every evaluation cycle.
+A ValidatingAdmissionPolicy is an **admission controller** - it only validates API requests at `CREATE` or `UPDATE` time. It does **not** retroactively scan resources that already exist on the cluster.
 
 ---
 
