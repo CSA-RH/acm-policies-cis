@@ -292,7 +292,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 **Test Procedure**
 
-1. Open the **ACM Console → Governance** dashboard. Locate the policy `detect-anonymous-and-wildcard-rbac` and review the current violations for the `rbac-no-wildcard-roles` template. Note the existing violations (if any).
+1. Open the **ACM Console → Governance** dashboard. Select the CIS OpenShift Container Platform 4 Benchmark standard and Locate the policy `detect-anonymous-and-wildcard-rbac` and review the current violations for the `rbac-no-wildcard-roles` template. Note the existing violations (if any).
 2. Create a test namespace and a Role with full wildcard permissions:
     ```bash
     oc new-project test-wildcard-role
@@ -334,7 +334,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
 
 **Test Procedure**
 
-1. Open the **ACM Console → Governance** dashboard. Locate the policy `cis-cluster-admin`. A violation is raising in the `local-cluster` for the CRB `cluster-admin-keycloak-admin`.
+1. Open the **ACM Console → Governance** dashboard. Select the CIS OpenShift Container Platform 4 Benchmark standard and locate the policy `cis-cluster-admin`. A violation is raising in the `local-cluster` for the CRB `cluster-admin-keycloak-admin`.
 2. Configure the CRB to be trusted by adding the CRB name to the configmap with the trusted CRB `policies/rbac/manifests/cm-rbac-exceptions.yaml`:
     ```yaml
     data:
@@ -355,7 +355,7 @@ Apply both ApplicationSets. Each auto-discovers folders under its respective dir
     Then remove the CRB name from `cm-rbac-exceptions.yaml`, commit and push.
 ---
 
-## Demo 3: Prohibit the creation of an object - using ValidatingAdmissionPolicy admission controller
+## Demo 3: Prohibit the creation of an object - using ValidatingAdmissionPolicy
 
 **Objectives:**
 
