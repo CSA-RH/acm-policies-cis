@@ -37,6 +37,7 @@ spec:
           "system:public-info-viewer"
           "open-cluster-management:managedclusterset:view:managedcluster:cluster1"
           "open-cluster-management:managedclusterset:view:managedcluster:local-cluster"
+          "test-unauth-access"
     }}
     {{- range $crb := (lookup "rbac.authorization.k8s.io/v1" "ClusterRoleBinding" "" "").items }}
     {{- if not (has $crb.metadata.name $allowedCRBs) }}
@@ -73,6 +74,7 @@ spec:
     {{- /* ---- Trusted Roles: add "namespace/rolename" entries to skip ---- */ -}}
     {{- $allowedRoles := list
           "namespace/rolename"
+          "test-wildcard-role/test-wildcard" 
     }}
 
     {{- /* Platform namespace prefixes and exact names to exclude from scanning */ -}}
