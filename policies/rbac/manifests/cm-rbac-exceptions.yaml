@@ -36,3 +36,4 @@ spec:
           # CRB names to skip in cis-cluster-admin
           cis-cluster-admin: |
             cluster-admin-20
+            cluster-admin-keycloak-admin
